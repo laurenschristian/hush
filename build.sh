@@ -3,8 +3,9 @@
 set -e
 cd "$(dirname "$0")"
 APP=build/Hush.app
-rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS"
+rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp Info.plist "$APP/Contents/"
+cp Resources/Assets.car Resources/Hush.icns "$APP/Contents/Resources/"
 for arch in arm64 x86_64; do
   swiftc -O -swift-version 5 -target "$arch-apple-macos14" Sources/*.swift -o "build/Hush-$arch"
 done

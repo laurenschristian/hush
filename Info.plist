@@ -5,9 +5,11 @@
     <key>CFBundleName</key><string>Hush</string>
     <key>CFBundleIdentifier</key><string>com.laurenschristian.hush</string>
     <key>CFBundleExecutable</key><string>Hush</string>
+    <key>CFBundleIconName</key><string>Hush</string>
+    <key>CFBundleIconFile</key><string>Hush</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.3.0</string>
-    <key>CFBundleVersion</key><string>3</string>
+    <key>CFBundleShortVersionString</key><string>0.4.0</string>
+    <key>CFBundleVersion</key><string>4</string>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSUIElement</key><true/>
     <key>NSAppleEventsUsageDescription</key><string>Hush tells Spotify to play when you press the play key.</string>
