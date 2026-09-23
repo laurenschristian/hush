@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -6,10 +7,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let players = Players()
     private var blocker: MusicBlocker?
     private var router: AudioRouter?
+    private var muteKey: HotKey?
 
     func applicationDidFinishLaunching(_ note: Notification) {
+        let router = AudioRouter()
+        router.onHeadphonesRemoved = { [weak self] in self?.players.pause() }
+        self.router = router
         blocker = MusicBlocker(players: players)
-        router = AudioRouter()
+        muteKey = HotKey(keyCode: kVK_ANSI_M, modifiers: controlKey | optionKey) { [weak self] in self?.toggleMute() }
         players.onChange = { [weak self] in self?.renderButton() }
         let menu = NSMenu()
         menu.delegate = self
@@ -19,7 +24,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func renderButton() {
         guard let button = item.button else { return }
-        button.image = NSImage(systemSymbolName: Prefs.blockMusic ? "music.note" : "music.note.slash", accessibilityDescription: "Hush")
+        let muted = router?.micMuted == true
+        let symbol = muted ? "mic.slash.fill" : Prefs.blockMusic ? "music.note" : "music.note.slash"
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Hush")
+        button.contentTintColor = muted ? .systemRed : nil
         button.imagePosition = .imageLeading
         if let t = players.track {
             let text = "\(t.title) · \(t.artist)"
@@ -48,8 +56,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(open)
         menu.addItem(.separator())
 
+        let mute = check("Mute mic", router?.micMuted == true, #selector(toggleMute))
+        mute.keyEquivalent = "m"
+        mute.keyEquivalentModifierMask = [.control, .option]
+        menu.addItem(mute)
         menu.addItem(check("Never use Bluetooth mic", Prefs.blockBluetoothMic, #selector(toggleMic)))
         menu.addItem(check("Switch output to headphones", Prefs.followHeadphones, #selector(toggleFollow)))
+        menu.addItem(check("Pause when headphones disconnect", Prefs.pauseOnDisconnect, #selector(togglePauseOnDisconnect)))
+        menu.addItem(check("Remember volume per device", Prefs.volumePerDevice, #selector(toggleVolume)))
+        menu.addItem(check("Pause music during calls", Prefs.callMode, #selector(toggleCallMode)))
         menu.addItem(disabled("Mic: \(Audio.defaultDevice(input: true)?.name ?? "none")"))
         menu.addItem(disabled("Output: \(Audio.defaultDevice(input: false)?.name ?? "none")"))
         menu.addItem(.separator())
@@ -77,9 +92,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func playPause() { players.playPause() }
+    @objc private func toggleMute() { router?.toggleMute(); renderButton() }
     @objc private func toggleBlockMusic() { Prefs.blockMusic.toggle(); renderButton() }
     @objc private func toggleMic() { Prefs.blockBluetoothMic.toggle() }
     @objc private func toggleFollow() { Prefs.followHeadphones.toggle() }
+    @objc private func togglePauseOnDisconnect() { Prefs.pauseOnDisconnect.toggle() }
+    @objc private func toggleVolume() { Prefs.volumePerDevice.toggle() }
+    @objc private func toggleCallMode() { Prefs.callMode.toggle() }
 
     @objc private func pickTarget(_ sender: NSMenuItem) {
         Prefs.target = Target(rawValue: sender.representedObject as? String ?? "") ?? .lastUsed

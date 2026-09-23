@@ -17,6 +17,22 @@ enum Prefs {
         get { bool("followHeadphones") }
         set { store.set(newValue, forKey: "followHeadphones") }
     }
+    static var pauseOnDisconnect: Bool {
+        get { bool("pauseOnDisconnect") }
+        set { store.set(newValue, forKey: "pauseOnDisconnect") }
+    }
+    static var volumePerDevice: Bool {
+        get { bool("volumePerDevice") }
+        set { store.set(newValue, forKey: "volumePerDevice") }
+    }
+    static var callMode: Bool {
+        get { bool("callMode") }
+        set { store.set(newValue, forKey: "callMode") }
+    }
+    static var volumes: [String: Float32] {
+        get { store.dictionary(forKey: "volumes") as? [String: Float32] ?? [:] }
+        set { store.set(newValue, forKey: "volumes") }
+    }
     static var target: Target {
         get { Target(rawValue: store.string(forKey: "target") ?? "") ?? .lastUsed }
         set { store.set(newValue.rawValue, forKey: "target") }

@@ -1,0 +1,24 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./build.sh
+      - name: Package
+        run: |
+          ZIP="Hush-${GITHUB_REF_NAME}.zip"
+          ditto -c -k --keepParent build/Hush.app "$ZIP"
+          shasum -a 256 "$ZIP" | tee sha256.txt
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" Hush-*.zip sha256.txt --generate-notes

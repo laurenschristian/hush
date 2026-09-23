@@ -1,3 +1,4 @@
+import AudioToolbox
 import CoreAudio
 import Foundation
 
@@ -20,11 +21,17 @@ enum Audio {
         AudioObjectPropertyAddress(mSelector: sel, mScope: scope, mElement: kAudioObjectPropertyElementMain)
     }
 
-    static func get<T: BitwiseCopyable>(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector, default value: T) -> T {
-        var addr = address(sel)
+    static func get<T: BitwiseCopyable>(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector, _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal, default value: T) -> T {
+        var addr = address(sel, scope)
         var out = value
         var size = UInt32(MemoryLayout<T>.size)
         return AudioObjectGetPropertyData(obj, &addr, 0, nil, &size, &out) == noErr ? out : value
+    }
+
+    static func set<T: BitwiseCopyable>(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector, _ scope: AudioObjectPropertyScope, _ value: T) {
+        var addr = address(sel, scope)
+        var v = value
+        AudioObjectSetPropertyData(obj, &addr, 0, nil, UInt32(MemoryLayout<T>.size), &v)
     }
 
     static func string(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector) -> String {
@@ -71,9 +78,24 @@ enum Audio {
     }
 
     static func setDefault(_ id: AudioDeviceID, input: Bool) {
-        var addr = address(defaultSelector(input: input))
-        var value = id
-        AudioObjectSetPropertyData(system, &addr, 0, nil, UInt32(MemoryLayout<AudioDeviceID>.size), &value)
+        set(system, defaultSelector(input: input), kAudioObjectPropertyScopeGlobal, id)
+    }
+
+    static func volume(_ id: AudioDeviceID) -> Float32? {
+        let v = get(id, kAudioHardwareServiceDeviceProperty_VirtualMainVolume, kAudioObjectPropertyScopeOutput, default: Float32(-1))
+        return v < 0 ? nil : v
+    }
+
+    static func setVolume(_ id: AudioDeviceID, _ value: Float32) {
+        set(id, kAudioHardwareServiceDeviceProperty_VirtualMainVolume, kAudioObjectPropertyScopeOutput, value)
+    }
+
+    static func isMuted(_ id: AudioDeviceID) -> Bool {
+        get(id, kAudioDevicePropertyMute, kAudioObjectPropertyScopeInput, default: UInt32(0)) != 0
+    }
+
+    static func setMuted(_ id: AudioDeviceID, _ muted: Bool) {
+        set(id, kAudioDevicePropertyMute, kAudioObjectPropertyScopeInput, UInt32(muted ? 1 : 0))
     }
 
     static func listen(_ sel: AudioObjectPropertySelector, _ block: @escaping () -> Void) {
@@ -81,10 +103,21 @@ enum Audio {
         AudioObjectAddPropertyListenerBlock(system, &addr, .main) { _, _ in block() }
     }
 
-    /// Bundle IDs of processes currently playing audio.
-    static func playingBundleIDs() -> [String] {
-        objects(system, kAudioHardwarePropertyProcessObjectList)
-            .filter { get($0, kAudioProcessPropertyIsRunningOutput, default: UInt32(0)) != 0 }
+    static func listen(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector, _ scope: AudioObjectPropertyScope, _ block: @escaping AudioObjectPropertyListenerBlock) {
+        var addr = address(sel, scope)
+        AudioObjectAddPropertyListenerBlock(obj, &addr, .main, block)
+    }
+
+    static func unlisten(_ obj: AudioObjectID, _ sel: AudioObjectPropertySelector, _ scope: AudioObjectPropertyScope, _ block: @escaping AudioObjectPropertyListenerBlock) {
+        var addr = address(sel, scope)
+        AudioObjectRemovePropertyListenerBlock(obj, &addr, .main, block)
+    }
+
+    /// Bundle IDs of processes currently playing audio (output) or recording it (input).
+    static func activeBundleIDs(input: Bool) -> [String] {
+        let sel = input ? kAudioProcessPropertyIsRunningInput : kAudioProcessPropertyIsRunningOutput
+        return objects(system, kAudioHardwarePropertyProcessObjectList)
+            .filter { get($0, sel, default: UInt32(0)) != 0 }
             .map { string($0, kAudioProcessPropertyBundleID) }
     }
 }
