@@ -1,13 +1,13 @@
 #!/bin/sh
 set -e
 cd "$(dirname "$0")"
-APP=build/PlayKey.app
+APP=build/Hush.app
 rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS"
 cp Info.plist "$APP/Contents/"
-swiftc -O Sources/main.swift -o "$APP/Contents/MacOS/PlayKey"
+swiftc -O -swift-version 5 Sources/*.swift -o "$APP/Contents/MacOS/Hush"
 codesign --force -s - "$APP"
 if [ "$1" = "install" ]; then
-  pkill -x PlayKey || true
-  rm -rf /Applications/PlayKey.app && cp -R "$APP" /Applications/
-  open /Applications/PlayKey.app
+  pkill -x Hush || true
+  rm -rf /Applications/Hush.app && cp -R "$APP" /Applications/
+  open /Applications/Hush.app
 fi
