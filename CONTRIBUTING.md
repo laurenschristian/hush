@@ -26,4 +26,4 @@ The icon source is `assets/Hush.icon`. Edit it in Icon Composer, which comes wit
 1. Update the version in `Info.plist` and add an entry to `CHANGELOG.md`.
 2. Tag and push: `git tag -a v0.4.0 -m v0.4.0 && git push --tags`
 3. The release workflow attaches `Hush-v0.4.0.zip` and `sha256.txt` to a GitHub release.
-4. Update `version` and `sha256` in `Casks/hush.rb` in [homebrew-tap](https://github.com/laurenschristian/homebrew-tap).
+4. Update `version` and `sha256` in `Casks/hush-audio.rb` in [homebrew-tap](https://github.com/laurenschristian/homebrew-tap).

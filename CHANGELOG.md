@@ -8,6 +8,9 @@ All notable changes to Hush are documented here. The format follows [Keep a Chan
 - App icon built with Icon Composer (Liquid Glass)
 - Documentation: how it works, troubleshooting, contributing, security
 
+### Changed
+- Homebrew cask renamed to `hush-audio`, because `hush` in homebrew/cask is an unrelated app
+
 ## [0.3.0] - 2026-09-23
 
 ### Added

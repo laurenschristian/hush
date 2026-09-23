@@ -64,11 +64,11 @@ Measured on macOS 26.3, Apple Silicon:
 ### Homebrew (recommended)
 
 ```sh
-brew install --cask laurenschristian/tap/hush
+brew install --cask laurenschristian/tap/hush-audio
 xattr -dr com.apple.quarantine /Applications/Hush.app
 ```
 
-Hush is not notarized, so the second command is needed before the first launch.
+Hush is not notarized, so the second command is needed before the first launch. The cask is named `hush-audio` because `hush` in Homebrew is an unrelated Safari extension. Upgrade with `brew upgrade --cask hush-audio`.
 
 ### Manual download
 
